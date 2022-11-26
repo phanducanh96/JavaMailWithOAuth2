@@ -8,7 +8,7 @@ Since Basic Authentication is getting deprecated in Exchange Online (Reference: 
 1. [msal4j](https://mvnrepository.com/artifact/com.microsoft.azure/msal4j)
 2. [json-smart](https://mvnrepository.com/artifact/net.minidev/json-smart)
 3. [oauth2-oidc-sdk](https://jar-download.com/artifacts/com.nimbusds/oauth2-oidc-sdk)
-4. [jackson-core](https://jar-download.com/artifacts/com.fasterxml.jackson.core)
+4. [jackson-core](https://jar-download.com/artifacts/com.fasterxml.jackson.core) <br/>
 **Step 3**: Go through the code
 ## References and further reads:
 [Azure-Samples/ms-identity-msal-java-samples/Client-Side Scenarios/Device-Code-Flow](https://github.com/Azure-Samples/ms-identity-msal-java-samples/tree/main/2.%20Client-Side%20Scenarios/Device-Code-Flow)<br/>
