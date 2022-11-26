@@ -10,7 +10,7 @@ Since Basic Authentication is getting deprecated in Exchange Online (Reference: 
 3. [oauth2-oidc-sdk](https://jar-download.com/artifacts/com.nimbusds/oauth2-oidc-sdk)
 4. [jackson-core](https://jar-download.com/artifacts/com.fasterxml.jackson.core) <br/>
 
-**Step 3**: Go through the code
+**Step 3**: Go through the code (This code is for Client Credentials Grant)
 ## References and further reads:
 [Azure-Samples/ms-identity-msal-java-samples/Client-Side Scenarios/Device-Code-Flow](https://github.com/Azure-Samples/ms-identity-msal-java-samples/tree/main/2.%20Client-Side%20Scenarios/Device-Code-Flow)<br/>
 [vesa-mailtest](https://github.com/eino-makitalo/vesa-mailtest/)<br/>
