@@ -6,20 +6,25 @@ import com.sun.mail.smtp.SMTPTransport;
 import javax.mail.*;
 import javax.mail.internet.*;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 public class TestMail {
 	private static Properties prop;
 	private static String clientId;
+	private static String tenantId;
 	private static String clientSecret;
 	private static String authEndpoint;
 	private static String redirectURI;
 	private static String userName;
+	private static String userPassword;
 	private static String clientAppType;
+	private static String publicClientAcquireToken;
 	private static String scopes[];
 	private static String recipent;
 	private static Set<String> SCOPE;
@@ -29,10 +34,13 @@ public class TestMail {
         try {
             prop = new ReadPropertyValues().getProperties();
             clientId=prop.getProperty("clientId", "").trim();
+            tenantId=prop.getProperty("tenantId", "").trim();
             authEndpoint=prop.getProperty("authEndpoint", "").trim();
             redirectURI=prop.getProperty("redirectURI", "").trim();
             userName = prop.getProperty("userName", "");
+            userPassword = prop.getProperty("userPassword", "");
             clientAppType = prop.getProperty("clientAppType", "");
+            publicClientAcquireToken = prop.getProperty("publicClientAcquireToken", "");
             scopes=prop.getProperty("scopes", "").trim().split(",");
             SCOPE = new HashSet<String>(Arrays.asList(scopes));
             recipent = prop.getProperty("recipent", "").trim();
@@ -50,13 +58,13 @@ public class TestMail {
     	IAuthenticationResult authresult = null;
     	switch(clientAppType) {
     	case "Desktop":
-    		authresult = TestMail.acquireTokenPublicInteractive();
+    		authresult = TestMail.acquireTokenPublic();
     		break;
     	case "Browserless":
-    		authresult = TestMail.acquireTokenPublicInteractive();
+    		authresult = TestMail.acquireTokenPublic();
     		break;
     	case "Mobile":
-    		authresult = TestMail.acquireTokenPublicInteractive();
+    		authresult = TestMail.acquireTokenPublic();
     		break;
     	case "Web":
     		authresult = TestMail.acquireTokenConfidential();
@@ -147,7 +155,7 @@ public class TestMail {
         return null;
     }
 
-    private static IAuthenticationResult acquireTokenPublicInteractive() throws Exception {
+    private static IAuthenticationResult acquireTokenPublic() throws Exception {
 
         // Load token cache from file and initialize token cache aspect. The token cache will have
         // dummy data, so the acquireTokenSilently call will fail.
@@ -163,7 +171,7 @@ public class TestMail {
         // accountsInCache to get the right account for the user authenticating.
         IAccount account = accountsInCache.iterator().next();
 
-        IAuthenticationResult result;
+        IAuthenticationResult authResult;
         try {
             SilentParameters silentParameters =
                     SilentParameters
@@ -172,24 +180,53 @@ public class TestMail {
 
             // try to acquire token silently. This call will fail since the token cache
             // does not have any data for the user you are trying to acquire a token for
-            result = pca.acquireTokenSilently(silentParameters).join();
+            authResult = pca.acquireTokenSilently(silentParameters).join();
         } catch (Exception ex) {
             if (ex.getCause() instanceof MsalException) {
-
-                InteractiveRequestParameters parameters = InteractiveRequestParameters
-                        .builder(new URI(redirectURI))
-                        .scopes(SCOPE)
-                        .build();
-
-                // Try to acquire a token interactively with system browser. If successful, you should see
-                // the token and account information printed out to console
-                result = pca.acquireToken(parameters).join();
+            	switch(publicClientAcquireToken) {
+            	case "Interactive":
+            		authResult = getTokenInteractive(pca);
+            		return authResult;
+            	case "Silently":
+            		authResult = getTokenSilently(pca);
+            		return authResult;
+            	default:
+            		return null;
+            	}
             } else {
                 // Handle other exceptions accordingly
                 throw ex;
             }
         }
-        return result;
+        return authResult;
+    }
+    
+    private static IAuthenticationResult getTokenInteractive(PublicClientApplication pca) throws URISyntaxException {
+    	
+        InteractiveRequestParameters parameters = InteractiveRequestParameters
+                .builder(new URI(redirectURI))
+                .scopes(SCOPE)
+                .build();
+        
+        CompletableFuture<IAuthenticationResult> authResultFuture = pca.acquireToken(parameters);
+        
+        IAuthenticationResult authResult = authResultFuture.join();
+    	
+    	return authResult;
+    }
+    
+    private static IAuthenticationResult getTokenSilently(PublicClientApplication pca) {
+    	
+        char[] MailPasswordArray = userPassword.toCharArray();
+        
+        UserNamePasswordParameters parameters = UserNamePasswordParameters.builder(SCOPE, userName, MailPasswordArray).build();
+        
+        
+        CompletableFuture<IAuthenticationResult> authResultFuture = pca.acquireToken(parameters);
+        
+        IAuthenticationResult authResult = authResultFuture.join();
+        
+    	return authResult;
     }
     
     private static IAuthenticationResult acquireTokenConfidential() throws Exception {
